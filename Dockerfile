@@ -51,6 +51,7 @@ WORKDIR /var/www/html
 # Install packages and no-cache
 # Menggunakan PHP 8.4 karena latest stable version
 # Untuk pemilihan versi PHP, pastikan sesuai dengan requirement dari aplikasi
+# Test tambah
 RUN apk add --no-cache \
   bash \
   curl \
