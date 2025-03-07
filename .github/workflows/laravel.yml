@@ -6,7 +6,7 @@ on:
 
 jobs:
   build:
-    environment: mindo-test
+    environment: staging
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
