@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+
+set -e
+
+# change APPLICATION_DOMAIN
+envsubst '$APPLICATION_DOMAIN' < /etc/nginx/conf.d/laravel.tmp > /etc/nginx/conf.d/laravel.conf
+
+role=${CONTAINER_ROLE:-webapp}
+env=${APP_ENV:-production}
+
+if [ "$env" != "local" ]; then
+    echo "Caching configuration..."
+    (cd /var/www/html && php84 artisan config:cache && php84 artisan route:cache)
+fi
+
+if [ "$role" = "webapp" ]; then
+    echo "Starting PHP-FPM and Nginx.."
+    php-fpm84 -F &  # Run PHP-FPM in the background
+    nginx -g "daemon off;" # Nginx will run in the foreground
+
+elif [ "$role" = "queue" ]; then
+    echo "Starting Laravel Queue.."
+    php84 /var/www/html/artisan queue:listen --sleep=5 --tries=3 --timeout=60 --delay=5
+
+elif [ "$role" = "scheduler" ]; then
+    echo "Starting Laravel Scheduler.."
+    while [ true ]
+    do
+      php84 /var/www/html/artisan schedule:run --verbose --no-interaction &
+      sleep 60
+    done
+
+else
+    echo "Could not match the container role \"$role\""
+    exit 1
+fi
+
