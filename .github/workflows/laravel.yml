@@ -29,10 +29,11 @@ jobs:
           tags: ndlrfz/laravelapp:latest,ndlrfz/laravelapp:${{ github.run_number }}
 
   deploy:
+    environment: deploy-server
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
       - name: curl
         uses: sozo-design/curl@v1.0.2
         with:
-          args: --user jenkins:bismillah https://cicd.ndlrfz.web.id/job/devops-test/build?token=bismillah
+          args: --user jenkins:${{ secrets.JENKINS_PASSWORD }} https://cicd.ndlrfz.web.id/job/devops-test/build?token=${{ secrets.JENKINS_TOKEN }}

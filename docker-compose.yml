@@ -1,5 +1,5 @@
 services:
-  # service for redis
+  # service for redis add test
   redis:
     image: redis:alpine
     restart: always
