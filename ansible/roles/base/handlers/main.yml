@@ -1,0 +1,16 @@
+#SPDX-License-Identifier: MIT-0
+---
+# handlers file for base
+- name: Start and enable Docker
+  ansible.builtin.systemd_service:
+    name: docker
+    state: started
+    enabled: true
+  listen: "start enable docker"
+
+- name: Start and enable Nginx
+  ansible.builtin.systemd_service:
+    name: nginx
+    state: started
+    enabled: true
+  listen: "start enable nginx"

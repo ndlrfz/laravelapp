@@ -1,0 +1,49 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for base
+- name: Installing curl ca-certificates
+  ansible.builtin.apt:
+    pkg:
+      - curl
+      - ca-certificates
+    update-cache: yes
+
+- name: Add Docker GPG key and Repository
+  ansible.builtin.shell: |
+    sudo install -m 0755 -d /etc/apt/keyrings
+    sudo curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
+    sudo chmod a+r /etc/apt/keyrings/docker.asc
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+- name: Installing Docker CE
+  ansible.builtin.apt:
+    pkg:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    update-cache: yes
+  notify: "start enable docker"
+
+- name: Install Nginx and Git
+  ansible.builtin.apt:
+    pkg:
+      - nginx
+      - git
+  notify: "start enable nginx"
+
+- name: Create new user
+  ansible.builtin.user:
+    name: app
+    shell: /bin/bash
+    state: present
+    groups: sudo,docker
+
+- name: Allow passwordless sudo for user app
+  ansible.builtin.lineinfile:
+    path: /etc/sudoers
+    state: present
+    regexp: "^app"
+    line: "app ALL=(ALL) NOPASSWD:ALL"
+    validate: "/usr/sbin/visudo -cf %s"
