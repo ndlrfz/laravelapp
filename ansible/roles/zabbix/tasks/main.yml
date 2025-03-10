@@ -1,0 +1,81 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for zabbix
+- name: Download Zabbix repository
+  ansible.builtin.get_url:
+    url: https://repo.zabbix.com/zabbix/7.2/release/debian/pool/main/z/zabbix-release/zabbix-release_latest_7.2+debian12_all.deb
+    dest: /opt/zabbix-release.deb
+    mode: "0644"
+
+- name: Adding Zabbix repository
+  ansible.builtin.apt:
+    deb: /opt/zabbix-release.deb
+    update_cache: yes
+
+- name: Installing PostgreSQL
+  ansible.builtin.apt:
+    pkg:
+      - postgresql
+      - postgresql-client
+      - postgresql-common
+      - python3-psycopg
+      - libpq-dev
+
+- name: Installing Zabbix
+  ansible.builtin.apt:
+    pkg:
+      - zabbix-server-pgsql
+      - zabbix-frontend-php
+      - php8.2-pgsql
+      - zabbix-nginx-conf
+      - zabbix-sql-scripts
+      - zabbix-agent
+
+- name: Create PostgreSQL database
+  community.postgresql.postgresql_db:
+    name: zabbix
+    state: present
+
+- name: Create user and set up privileges
+  community.postgresql.postgresql_user:
+    db: zabbix
+    name: zabbix
+    password: zabbix
+    priv: ALL
+    state: present
+
+- name: Grant privileges
+  community.postgresql.postgresql_privs:
+    type: schema
+    db: zabbix
+    role: zabbix
+    privs: ALL
+    objs: public
+
+- name: Import Zabbix database schema
+  community.postgresql.postgresql_db:
+    login_user: zabbix
+    login_host: localhost
+    login_password: zabbix
+    name: zabbix
+    state: restore
+    target: /usr/share/zabbix/sql-scripts/postgresql/server.sql.gz
+
+- name: Change DBPassword zabbix_server.conf
+  ansible.builtin.lineinfile:
+    path: /etc/zabbix/zabbix_server.conf
+    regexp: "^# DBPassword="
+    insertafter: "^# DBPassword="
+    line: DBPassword=zabbix
+
+- name: Setting up Nginx
+  ansible.builtin.lineinfile:
+    path: /etc/zabbix/nginx.conf
+    regexp: "^#        listen          8080;"
+    insertafter: "^#        listen          8080;"
+    line: "listen 8080;"
+  notify:
+    - Restart Zabbix server
+    - Restart Zabbix agent
+    - Restart Nginx
+    - Restart PHP-FPM

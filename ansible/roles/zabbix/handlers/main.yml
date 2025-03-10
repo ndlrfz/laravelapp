@@ -1,0 +1,26 @@
+#SPDX-License-Identifier: MIT-0
+---
+# handlers file for zabbix
+- name: Restart Zabbix server
+  ansible.builtin.systemd_service:
+    name: zabbix-server
+    state: started
+    enabled: true
+
+- name: Restart Zabbix agent
+  ansible.builtin.systemd_service:
+    name: zabbix-agent
+    state: started
+    enabled: true
+
+- name: Restart Nginx
+  ansible.builtin.systemd_service:
+    name: nginx
+    state: restarted
+    enabled: true
+
+- name: Restart PHP-FPM
+  ansible.builtin.systemd_service:
+    name: php8.2-fpm
+    state: restarted
+    enabled: true

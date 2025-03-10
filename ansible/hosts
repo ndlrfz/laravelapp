@@ -1,2 +1,5 @@
 [deploy]
 deploy ansible_host=192.168.56.75
+
+[zabbix]
+zabbix ansible_host=192.168.56.80
